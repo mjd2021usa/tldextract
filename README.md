@@ -1,2 +1,2 @@
 # tldextract
-TLD Extract tool
+TLD Extract written in Go
