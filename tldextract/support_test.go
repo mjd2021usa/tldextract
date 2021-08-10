@@ -198,3 +198,12 @@ func Test_SubDomain(t *testing.T) {
 		assert.Equal(tc.ExpectedSubDomain, actualSubDomain, tc.Description)
 	}
 }
+
+func Test_CreateList(t *testing.T) {
+	assert := assert.New(t)
+
+	actual := CreateList()
+
+	assert.NotNil(actual, "Not Nil")
+	assert.NotEqual(0, len(actual), "Length is not 0")
+}

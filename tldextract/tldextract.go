@@ -47,18 +47,18 @@ type TldNode struct {
 }
 
 type TLDExtract struct {
-	//CacheTimeout int64
-	CacheFile string
-	TldNodes  *TldNode
-	Debug     bool
+	CacheTimeout int64
+	CacheFile    string
+	TldNodes     *TldNode
+	Debug        bool
 }
 
 func New(fqdn string, debug bool) (*TLDExtract, error) {
 	// Load Unique Cache List
-	//timeout := GetEnvInt64("TLDEXTRACT_CACHE_TIMEOUT", 10, 64, DefaultCacheTimeout)
+	timeout := GetEnvInt64("TLDEXTRACT_CACHE_TIMEOUT", 10, 64, DefaultCacheTimeout)
 	urlsString := GetEnvString("TLDEXTRACT_URLS", strings.Join(DefaultTldUrls, ","))
 	urls := strings.Split(urlsString, ",")
-	cache, err := LoadCache(fqdn, urls, true)
+	cache, err := LoadCache(fqdn, urls, true, timeout)
 	if err != nil {
 		panic(fmt.Sprintf("Cache error: %s", err))
 	}
@@ -76,10 +76,10 @@ func New(fqdn string, debug bool) (*TLDExtract, error) {
 	}
 
 	tld := TLDExtract{
-		CacheFile: fqdn,
-		//CacheTimeout: timeout,
-		Debug:    debug,
-		TldNodes: tldNodes,
+		CacheFile:    fqdn,
+		CacheTimeout: timeout,
+		Debug:        debug,
+		TldNodes:     tldNodes,
 	}
 	return &tld, nil
 }
