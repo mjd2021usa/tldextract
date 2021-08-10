@@ -86,7 +86,7 @@ func CreateNewCacheFile(fqdn string, urls []string, timeout int64) (map[string]s
 		err := WriteFile(fqdn, []byte(buf))
 		return uniqueList, err
 	}
-	return nil, fmt.Errorf("No records found - skipping overwrite")
+	return nil, fmt.Errorf("no records found - skipping overwrite")
 }
 
 // LoadCache - Load cache file with Refresh and fail over options

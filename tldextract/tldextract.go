@@ -17,8 +17,8 @@ const (
 
 	Malformed = iota
 	Domain
-	Ip4
-	Ip6
+	IPv4
+	IPv6
 )
 
 var (
@@ -60,7 +60,7 @@ func New(fqdn string, debug bool) (*TLDExtract, error) {
 	urls := strings.Split(urlsString, ",")
 	cache, err := LoadCache(fqdn, urls, true, timeout)
 	if err != nil {
-		panic(fmt.Sprintf("Cache error: %s", err))
+		return nil, err
 	}
 
 	// Load Unique Cache List into TldNode structure
@@ -137,9 +137,9 @@ func (tlde *TLDExtract) extract(url string) *Result {
 		ip := net.ParseIP(url)
 		if ip != nil {
 			if IsIPv4(ip) {
-				return &Result{Flag: Ip4, Domain: url}
+				return &Result{Flag: IPv4, Domain: url}
 			} else if IsIPv6(ip) {
-				return &Result{Flag: Ip6, Domain: url}
+				return &Result{Flag: IPv6, Domain: url}
 			}
 			return &Result{Flag: Malformed, Domain: url}
 		}
