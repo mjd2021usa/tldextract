@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/mjd2021usa/tldextract"
+	"github.com/mjd2021usa/tldextract/tldextract"
 )
 
 func main() {

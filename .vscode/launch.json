@@ -12,7 +12,7 @@
             "remotePath": "",
             "port": 2345,
             "program": "${workspaceFolder}/examples/01/main.go",
-            "cwd": "${workspaceFolder}/examples/01/sandbox",
+            "cwd": "${workspaceFolder}/examples/sandbox",
             "env": {},
             "args": [],
             "showLog": true,

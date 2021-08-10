@@ -47,15 +47,15 @@ type TldNode struct {
 }
 
 type TLDExtract struct {
-	CacheTimeout int64
-	CacheFile    string
-	TldNodeCache TldNode
-	Cache        map[string]struct{}
-	Debug        bool
+	//CacheTimeout int64
+	CacheFile string
+	TldNodes  *TldNode
+	Debug     bool
 }
 
 func New(fqdn string, debug bool) (*TLDExtract, error) {
-	timeout := GetEnvInt64("TLDEXTRACT_CACHE_TIMEOUT", 10, 64, DefaultCacheTimeout)
+	// Load Unique Cache List
+	//timeout := GetEnvInt64("TLDEXTRACT_CACHE_TIMEOUT", 10, 64, DefaultCacheTimeout)
 	urlsString := GetEnvString("TLDEXTRACT_URLS", strings.Join(DefaultTldUrls, ","))
 	urls := strings.Split(urlsString, ",")
 	cache, err := LoadCache(fqdn, urls, true)
@@ -63,13 +63,45 @@ func New(fqdn string, debug bool) (*TLDExtract, error) {
 		panic(fmt.Sprintf("Cache error: %s", err))
 	}
 
+	// Load Unique Cache List into TldNode structure
+	newEmptyMap := make(map[string]*TldNode)
+	tldNodes := &TldNode{ExceptRule: false, ValidTld: false, matches: newEmptyMap}
+	for key, _ := range cache {
+		exceptionRule := key[0] == '!'
+		if exceptionRule {
+			key = key[1:]
+		}
+		parts := strings.Split(key, ".")
+		addTldRule(tldNodes, parts, exceptionRule)
+	}
+
 	tld := TLDExtract{
-		CacheFile:    fqdn,
-		CacheTimeout: timeout,
-		Cache:        cache,
-		Debug:        debug,
+		CacheFile: fqdn,
+		//CacheTimeout: timeout,
+		Debug:    debug,
+		TldNodes: tldNodes,
 	}
 	return &tld, nil
+}
+
+func addTldRule(rootNode *TldNode, parts []string, ex bool) {
+	numParts := len(parts)
+	current := rootNode
+	for idx := numParts - 1; idx >= 0; idx-- {
+		lab := parts[idx]
+		match, found := current.matches[lab]
+		if !found {
+			except := ex
+			valid := !ex && idx == 0
+			newEmptyMap := make(map[string]*TldNode)
+			current.matches[lab] = &TldNode{ExceptRule: except, ValidTld: valid, matches: newEmptyMap}
+			match = current.matches[lab]
+		} else if !ex && idx == 0 {
+			match.ValidTld = true
+		}
+
+		current = match
+	}
 }
 
 func (tlde *TLDExtract) Extract(urlString string) *Result {
@@ -133,17 +165,17 @@ func (tlde *TLDExtract) extractTld(url string) (domain, tld string) {
 }
 
 func (tlde *TLDExtract) getTldIndex(labels []string) (int, bool) {
-	t := tlde.TldNodeCache
+	current := tlde.TldNodes
 	parentValid := false
 	for idx := len(labels) - 1; idx >= 0; idx-- {
 		lab := labels[idx]
-		node, foundLabel := t.matches[lab]
-		_, foundAsterisk := t.matches["*"]
+		node, foundLabel := current.matches[lab]
+		_, foundAsterisk := current.matches["*"]
 
 		switch {
 		case foundLabel && !node.ExceptRule:
 			parentValid = node.ValidTld
-			t = *node
+			current = node
 		// Found an exception rule
 		case foundLabel:
 			fallthrough
