@@ -9,8 +9,6 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "remotePath": "",
-            "port": 2345,
             "program": "${workspaceFolder}/examples/01/main.go",
             "cwd": "${workspaceFolder}/examples/sandbox",
             "env": {},
@@ -29,8 +27,6 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "remotePath": "",
-            "port": 2345,
             "program": "${workspaceFolder}/examples/02/main.go",
             "cwd": "${workspaceFolder}/examples/sandbox",
             "env": {},
@@ -43,6 +39,6 @@
                 "maxArrayValues": 1000,
                 "maxStructFields": -1
             }
-        }
+        },
     ]
 }
