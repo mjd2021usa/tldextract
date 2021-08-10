@@ -33,11 +33,11 @@ func Test_New_good_cache_file(t *testing.T) {
 	assert.NotNil(actual, "Result not nil")
 }
 
-func assertResult(t *testing.T, url string, expected *Result, returned *Result, description string) {
-	if (expected.Flag == returned.Flag) && (expected.Domain == returned.Domain) && (expected.SubDomain == returned.SubDomain) && (expected.Tld == returned.Tld) {
+func assertResult(t *testing.T, url string, expected *Result, actual *Result, description string) {
+	if (expected.Flag == actual.Flag) && (expected.SubDomain == actual.SubDomain) && (expected.Domain == actual.Domain) && (expected.Tld == actual.Tld) {
 		return
 	}
-	t.Errorf("%s - %s;expected:%+v;returned:%+v", description, url, expected, returned)
+	t.Errorf("%s - %s - expected:%+v, actual:%+v", description, url, expected, actual)
 }
 
 func Test_Extract(t *testing.T) {
