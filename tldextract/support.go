@@ -60,8 +60,8 @@ func IsIPv6(ip net.IP) bool {
 // CreateList -
 func CreateList(timeout int64) map[string]struct{} {
 	urls := []string{
-		"https://publicsuffix.org/list/public_suffix_list.dat",
-		"https://raw.githubusercontent.com/publicsuffix/list/master/public_suffix_list.dat",
+		"https://publicsuffix.org/list/public_suffix_list.dat",                              // Main list
+		"https://raw.githubusercontent.com/publicsuffix/list/master/public_suffix_list.dat", // Fallback
 	}
 	uniqueList := make(map[string]struct{})
 	for _, url := range urls {

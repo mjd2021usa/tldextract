@@ -11,8 +11,9 @@ const (
 	DefaultCacheTimeout int64 = 10
 
 	// Use raw strings to avoid having to quote the backslashes.
-	DomainRegexText = `^[a-z0-9-\p{Han}]{1,63}$`
-	//IP4RegexText    = `^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`
+	// \p{Han} allows matching a Chinese, Japanese, and Korean characters
+	// \p{Greek} allows matching a Greek characters
+	DomainRegexText = `^[a-z0-9-\p{Han}-\p{Greek}]{1,63}$`
 	SchemeRegexText = `^([a-z0-9\+\-\.]+:)?//`
 
 	Malformed = iota
@@ -23,13 +24,12 @@ const (
 
 var (
 	DefaultTldUrls = []string{
-		"https://publicsuffix.org/list/public_suffix_list.dat",
-		"https://raw.githubusercontent.com/publicsuffix/list/master/public_suffix_list.dat",
+		"https://publicsuffix.org/list/public_suffix_list.dat",                              // Main list
+		"https://raw.githubusercontent.com/publicsuffix/list/master/public_suffix_list.dat", // Fallback
 	}
 
 	// Compile the expression once, preferably at init time.
 	domainRegex = regexp.MustCompile(DomainRegexText)
-	//ip4Regex    = regexp.MustCompile(IP4RegexText)
 	schemeRegex = regexp.MustCompile(SchemeRegexText)
 )
 
@@ -138,8 +138,6 @@ func (tlde *TLDExtract) extract(url string) *Result {
 		if ip != nil {
 			if IsIPv4(ip) {
 				return &Result{Flag: IPv4, Domain: url}
-			} else if IsIPv6(ip) {
-				return &Result{Flag: IPv6, Domain: url}
 			}
 			return &Result{Flag: Malformed, Domain: url}
 		}
