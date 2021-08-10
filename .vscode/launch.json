@@ -23,6 +23,26 @@
                 "maxArrayValues": 1000,
                 "maxStructFields": -1
             }
+        },
+        {
+            "name": "Debug - example 02 - Comprehensive Integration Test",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "remotePath": "",
+            "port": 2345,
+            "program": "${workspaceFolder}/examples/02/main.go",
+            "cwd": "${workspaceFolder}/examples/sandbox",
+            "env": {},
+            "args": [],
+            "showLog": true,
+            "dlvLoadConfig": {
+                "followPointers": true,
+                "maxVariableRecurse": 1,
+                "maxStringLen": 10000,
+                "maxArrayValues": 1000,
+                "maxStructFields": -1
+            }
         }
     ]
 }

@@ -202,7 +202,7 @@ func Test_SubDomain(t *testing.T) {
 func Test_CreateList(t *testing.T) {
 	assert := assert.New(t)
 
-	actual := CreateList()
+	actual := CreateList(10)
 
 	assert.NotNil(actual, "Not Nil")
 	assert.NotEqual(0, len(actual), "Length is not 0")

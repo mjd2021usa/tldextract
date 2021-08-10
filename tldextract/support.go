@@ -57,24 +57,6 @@ func IsIPv6(ip net.IP) bool {
 	return ip.To16() != nil
 }
 
-// RemoveNoiseLines - remove blankc lines and comments, with lines converter to lowercase
-func RemoveNoiseLines(srcLines []string) []string {
-	dstLines := []string{}
-	for _, line := range srcLines {
-		line = strings.TrimSpace(line)
-		if line != "" && !strings.HasPrefix(line, "//") {
-			dstLines = append(dstLines, strings.ToLower(line))
-		}
-	}
-	return dstLines
-}
-
-// NormalizeLines - split buffer into lines and remove noise
-func NormalizeLines(buffer string) []string {
-	lines := strings.Split(buffer, "\n")
-	return RemoveNoiseLines(lines)
-}
-
 // CreateList -
 func CreateList(timeout int64) map[string]struct{} {
 	urls := []string{
@@ -95,6 +77,38 @@ func CreateList(timeout int64) map[string]struct{} {
 	return uniqueList
 }
 
+// CreateNewCacheFile - create new cache file from URLs
+func CreateNewCacheFile(fqdn string, urls []string, timeout int64) (map[string]struct{}, error) {
+	uniqueList := DownloadUrls2List(urls, timeout)
+	keys := GetKeys(uniqueList)
+	if len(keys) > 0 {
+		buf := strings.Join(keys, "\n")
+		err := WriteFile(fqdn, []byte(buf))
+		return uniqueList, err
+	}
+	return nil, fmt.Errorf("No records found - skipping overwrite")
+}
+
+// LoadCache - Load cache file with Refresh and fail over options
+func LoadCache(fqdn string, urls []string, refresh bool, timeout int64) (map[string]struct{}, error) {
+	if refresh {
+		// Refresh cache from URLs
+		uList, err := CreateNewCacheFile(fqdn, urls, timeout)
+		if err != nil || len(uList) <= 0 {
+			// Fall back to cache file
+			return LoadCacheFile(fqdn)
+		}
+		return uList, err
+	}
+	uList, err := LoadCacheFile(fqdn)
+	if err != nil || len(uList) <= 0 {
+		// try to refresh cache from URLs
+		return CreateNewCacheFile(fqdn, urls, timeout)
+	}
+	return uList, err
+}
+
+// GetKeys - get list of keys from generic map as string array
 func GetKeys(list map[string]struct{}) []string {
 	keys := make([]string, 0, len(list))
 	for key := range list {
@@ -103,60 +117,70 @@ func GetKeys(list map[string]struct{}) []string {
 	return keys
 }
 
+// LoadCacheFile - read cache file and Normalize contents (remove comments, split lines, etc)
+func LoadCacheFile(fqdn string) (map[string]struct{}, error) {
+	data, err := ReadFile(fqdn)
+	if err != nil {
+		return nil, err
+	}
+	// Normalize buffer into string array
+	resp := NormalizeLines(string(data))
+	// Add lines to unique list
+	uList := make(map[string]struct{})
+	for _, item := range resp {
+		uList[item] = struct{}{}
+	}
+	return uList, nil
+}
+
+// DownloadUrls2List - Download N number of URLs and merge the unique rows into a generic key map
 func DownloadUrls2List(urls []string, timeout int64) map[string]struct{} {
-	uniqueList := make(map[string]struct{})
+	uList := make(map[string]struct{})
 	for _, url := range urls {
 		data, err := DownloadFile(url, timeout)
 		if err != nil {
+			// nothing good, move to next file
 			continue
 		}
+		// Normalize buffer into string array
 		resp := NormalizeLines(string(data))
+		// Add lines to unique list
 		for _, item := range resp {
-			uniqueList[item] = struct{}{}
+			uList[item] = struct{}{}
 		}
 	}
-	return uniqueList
+	return uList
 }
 
-func CreateNewCacheFile(fqdn string, urls []string, timeout int64) (map[string]struct{}, error) {
-	uniqueList := DownloadUrls2List(urls, timeout)
-	keys := GetKeys(uniqueList)
-	var buf string
-	if len(keys) > 0 {
-		buf = strings.Join(keys, "\n")
-	}
-	err := WriteFile(fqdn, []byte(buf))
-	return uniqueList, err
-}
-
-func LoadCache(fqdn string, urls []string, refresh bool, timeout int64) (map[string]struct{}, error) {
-	if refresh {
-		return CreateNewCacheFile(fqdn, urls, timeout)
-	} else {
-		data, err := ReadFile(fqdn)
-		if err != nil {
-			return CreateNewCacheFile(fqdn, urls, timeout)
+// RemoveNoiseLines - remove blank lines and comments, converting each kept line to lowercase
+func RemoveNoiseLines(srcLines []string) []string {
+	dstLines := []string{}
+	for _, line := range srcLines {
+		line = strings.TrimSpace(line)
+		if line != "" && !strings.HasPrefix(line, "//") {
+			dstLines = append(dstLines, strings.ToLower(line))
 		}
-		resp := NormalizeLines(string(data))
-		uniqueList := make(map[string]struct{})
-		for _, item := range resp {
-			uniqueList[item] = struct{}{}
-		}
-		return uniqueList, nil
 	}
+	return dstLines
 }
 
-// ReadFile -
+// NormalizeLines - split string into array of strings and remove noise lines
+func NormalizeLines(buffer string) []string {
+	lines := strings.Split(buffer, "\n")
+	return RemoveNoiseLines(lines)
+}
+
+// ReadFile - Read file into byte array
 func ReadFile(fqfn string) ([]byte, error) {
 	return ioutil.ReadFile(fqfn)
 }
 
-// WriteFile -
+// WriteFile - Write byte array into file
 func WriteFile(fqfn string, buffer []byte) error {
 	return ioutil.WriteFile(fqfn, buffer, fs.FileMode(0644))
 }
 
-// DownloadFile -
+// DownloadFile - Get body from URL
 func DownloadFile(url string, timeout int64) ([]byte, error) {
 	client := http.Client{
 		Timeout: time.Duration(timeout) * time.Second,
